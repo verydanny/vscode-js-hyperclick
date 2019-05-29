@@ -67,7 +67,7 @@ export const parsePathForDirs = async (
         thisDirConcatenatedToPreviousDir
       )
       const thisDirFoldersArr = thisDirRelativeToBaseDir.split('/')
-      
+
       dirList.push({
         name: thisDirRelativeToBaseDir,
         path: resolve(

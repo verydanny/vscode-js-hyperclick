@@ -53,7 +53,7 @@ export class WorkspaceDirectoryHelper {
   }
 
   buildWorkplaceLayout = () => buildFolderStructure(this[workspaceFolders])
-  
+
   get getWorkplaceStructure() {
     return this.buildWorkplaceLayout()
   }
