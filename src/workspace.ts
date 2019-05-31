@@ -2,26 +2,26 @@ import * as vscode from 'vscode'
 
 import { parsePathForDirs } from './utils'
 
-type StorageBin = {
+export type StorageBin = {
   name: string,
   data: import('./utils').DirlistT[]
 }[]
 
+export type FormatWorkspaceData = {
+  name: string;
+  fsDir: string;
+}[]
+
+/**
+ * 
+ * @param workspaces vscode.WorkspaceFolder[]
+ * @description Just extracts the name and fs-compatible absolute path for the workspace
+ */
 const formatWorkspaceData = (workspaces: vscode.WorkspaceFolder[]) =>
   workspaces.map(({ name, uri }) => ({
     name,
     fsDir: uri.fsPath,
   }))
-
-async function getDirectoryLayout(directory: string) {
-  const directoryList = await parsePathForDirs(
-    directory,
-    [],
-    directory,
-  )
-
-  return directoryList
-}
 
 async function buildFolderStructure(workspaces: vscode.WorkspaceFolder[] | undefined) {
   const storageBin: StorageBin = []
@@ -29,12 +29,12 @@ async function buildFolderStructure(workspaces: vscode.WorkspaceFolder[] | undef
   if (workspaces) {
     const formattedWorkspaceData = formatWorkspaceData(workspaces)
 
+    // This might be possible to break into 2 worker threads. One scans 1 directory
+    // And the other can scan the other
     for (const { fsDir, name } of formattedWorkspaceData) {
-      const data = await getDirectoryLayout(fsDir)
-
       storageBin.push({
         name,
-        data
+        data: await parsePathForDirs(fsDir, [], fsDir)
       })
     }
   }
@@ -47,14 +47,5 @@ const workspaceFolders = Symbol('workspaceFolders')
 export class WorkspaceDirectoryHelper {
   readonly [workspaceFolders] = vscode.workspace.workspaceFolders
 
-  constructor() {
-    // Initiate the folder struct
-    this.buildWorkplaceLayout()
-  }
-
   buildWorkplaceLayout = () => buildFolderStructure(this[workspaceFolders])
-
-  get getWorkplaceStructure() {
-    return this.buildWorkplaceLayout()
-  }
 }

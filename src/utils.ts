@@ -1,26 +1,75 @@
-import * as fs from 'fs'
+import * as vscode from 'vscode'
+import { statSync, readdirSync, existsSync } from 'fs'
 import { join, relative, resolve } from 'path'
-import { promisify } from 'util'
-
-const readdir = promisify(fs.readdir)
-const exists = promisify(fs.exists)
-const stat = promisify(fs.stat)
 
 export type DirlistT = {
   name: string,
   path: string,
   folders: string[],
-  options: string[],
-  dirnameRegex: RegExp,
+  options: string[]
 }
 
 /**
  * This can be an option in the extension
  */
-const ignoredDirectories = ['node_modules', '.git']
+const ignoredDirectories = ['node_modules', '.git', 'dist']
+const possibleExtensions = ['js', 'jsx', 'ts', 'tsx', 'mjs', 'es6', 'es']
 
-export const isDirectory = (path: string) => stat(path)
-  .then(stats => stats.isDirectory()).catch(e => e)
+export function extractImportPathFromTextLine(textLine: vscode.TextLine): { path: string, range: vscode.Range } | undefined {
+  const pathRegs = [
+    /import\s+.*\s+from\s+['"](.*)['"]/,
+    /import\s*\(['"](.*)['"]\)/,
+    /require\s*\(['"](.*)['"]\)/,
+    /import\s+['"](.*)['"]/
+  ]
+
+  for (const pathReg of pathRegs) {
+    const execResult = pathReg.exec(textLine.text)
+
+    if (execResult && execResult[1]) {
+      const filePath = execResult[1]
+      const filePathIndex = execResult[0].lastIndexOf(filePath)
+      const start = execResult.index + filePathIndex
+      const end = start + filePath.length
+
+      return {
+        path: filePath,
+        range: new vscode.Range(textLine.lineNumber, start, textLine.lineNumber, end),
+      }
+    }
+  }
+}
+
+export const findFile = (
+  directory: string,
+  filename: string,
+) => {
+  for (const extension of possibleExtensions) {
+    const fileTest = join(directory,`${filename}.${extension}`)
+
+    if (existsSync(fileTest)) {
+      return fileTest
+    }
+  }
+
+  return false
+}
+
+export const isDirectory = (path: string) => {
+  try {
+    return statSync(path).isDirectory()
+  } catch(e) {
+    return false
+  }
+}
+
+export const isFile = (path: string) => {
+  try {
+    return statSync(path).isFile()
+  } catch(e) {
+    return false
+  }
+}
 
 export const createAliasListForThisDir = (folderSections: string[]) => {
   const sections = [...folderSections]
@@ -52,11 +101,13 @@ export const parsePathForDirs = async (
   baseDir: string,
 ) => {
   dirList = dirList || []
-  const paths = await readdir(dirToRecursivelyScan)
+  // In a recursively searched directory structure, synchronous is better
+  // In fact, it's 2x faster.
+  const paths = readdirSync(dirToRecursivelyScan)
 
   for (const directoryPath of paths) {
     if (
-      await isDirectory(
+      isDirectory(
         join(dirToRecursivelyScan, directoryPath)
       )
       && ignoredDirectories.indexOf(directoryPath) === -1
@@ -75,8 +126,7 @@ export const parsePathForDirs = async (
           thisDirRelativeToBaseDir
         ),
         folders: thisDirFoldersArr,
-        options: createAliasListForThisDir(thisDirFoldersArr),
-        dirnameRegex: new RegExp(thisDirRelativeToBaseDir)
+        options: createAliasListForThisDir(thisDirFoldersArr)
       })
 
       dirList = await parsePathForDirs(
