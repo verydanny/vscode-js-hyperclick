@@ -43,7 +43,7 @@ If you have a mixed TypeScript/JavaScript folder structure, you might suffer per
 
 Use the following `tsconfig.json` settings to help this out. After initial TS "boot up", it should be fine.
 
-```json
+```js
 {
   ...,
   allowJs: true,
