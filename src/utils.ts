@@ -13,7 +13,7 @@ export type DirlistT = {
  * This can be an option in the extension
  */
 const ignoredDirectories = ['node_modules', '.git', 'dist']
-const possibleExtensions = ['js', 'jsx', 'ts', 'tsx', 'mjs', 'es6', 'es']
+export const possibleExtensions = ['js', 'jsx', 'ts', 'tsx', 'mjs', 'es6', 'es', 'vue']
 
 export function extractImportPathFromTextLine(textLine: vscode.TextLine): { path: string, range: vscode.Range } | undefined {
   const pathRegs = [

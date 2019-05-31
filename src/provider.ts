@@ -18,6 +18,7 @@ interface ParsedPath {
   name: string;
 }
 
+
 export class Provider {
   context: vscode.ExtensionContext
   documentUri?: vscode.Uri
@@ -40,6 +41,9 @@ export class Provider {
     document: vscode.TextDocument,
     position: vscode.Position,
   ) {
+    // I need a way to disable the tsserver definition provider if it can't
+    // find file within 20ms
+
     const Uri = document.uri
     const workspaceName = vscode.workspace.getWorkspaceFolder(Uri)
 
@@ -66,7 +70,7 @@ export class Provider {
           code: importLine.text
         }
 
-        this.buildPath(importUrl)
+        return this.buildPath(importUrl)
       }
     }
     return undefined
@@ -132,7 +136,7 @@ export class Provider {
           ...this.cacheUri,
           uri: location,
         }
-        
+
         return location
       }
     }

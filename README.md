@@ -1,35 +1,71 @@
-# js-hyperclick README
+# js-hyperclick
 
-This is the README for your extension "js-hyperclick". After writing up a brief description, we recommend including the following sections.
+[How To Use](readme/example1.gif)
+
+### **WIP - This is a work in progress**
+
+VSCode extension that attempts to deduce aliased module paths. Sometimes aliases are defined in webpack, Typescript settings, or
+babel to avoid relative imports. I will not argue if this is right or wrong (it's wrong), but I got tired of having to copy/paste the paths and type it into vscode's fuzzy search for certain projects I was working on.
+
+If you’re not familiar with the concept of aliasing, it turns a file like this:
+
+```js
+import React from 'react'
+import { connect } from 'react-redux'
+import { someConstant } from './../../config/constants'
+import MyComponent from './../../../components/MyComponent'
+```
+
+Into this:
+
+```js
+import React from 'react'
+import { connect } from 'react-redux'
+import { someConstant } from 'config/constants'
+import MyComponent from 'components/MyComponent'
+```
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- **Automatic aliases deduction**  
+`apps/components/core -> /Users/example/source/app-name/src/apps/components/core/index.js`
+- **Finds and locates `index` files**
+- **Pretty fast**  
+  - I haven't tested massive projects, but it takes about 90ms to boot up for a project with 1200 directories
+- **Coming Soon**:
+  - Automatic `baseDir` inference based on `tsconfig.json`
+  - Automatic `baseDir` inference based on `package.json` having a `moduleRoots` property
 
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+If you have a mixed TypeScript/JavaScript folder structure, you might suffer performance issues because TypeScrip still attempts to configure the JS files under the `tsconfig.json` file. 
+
+Use the following `tsconfig.json` settings to help this out. After initial TS "boot up", it should be fine.
+
+```json
+{
+  ...,
+  allowJs: true,
+  checkJs: true,
+  ...
+}
+```
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+**SOON**
 
-For example:
+**`jsHyperclick.supportedFiletypes`**: **`string[]`** - An array of extensions js-hyperclick will attempt to resolve. More extensions means longer resolution. Try not to go overboard here.  
+>example: `['js', 'vue', 'jsx']`  
 
-This extension contributes the following settings:
+<br/>
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+**`jsHyperclick.tsConfigLocation`** : **`string[]`** - Path of tsConfig (only if it's not at root)
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+In a TypeScript/JavaScript mixed project, when one opens a JS file it attempts to infer paths and aliases which may create a race condition. A solution is to `allowJs` and `checkJs` in the tsconfig.json file.
 
 ## Release Notes
 
@@ -37,29 +73,4 @@ Users appreciate release notes as you update your extension.
 
 ### 1.0.0
 
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Initial release of jsHyperclick

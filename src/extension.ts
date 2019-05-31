@@ -1,4 +1,5 @@
 import * as vscode from 'vscode'
+import { possibleExtensions } from './utils'
 import { Provider } from './provider'
 import { WorkspaceDirectoryHelper } from './workspace'
 
@@ -17,14 +18,11 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   }
 
-  const languageProviders = [
-    { scheme: 'file', language: 'javascript' },
-    { scheme: 'file', language: 'javascriptreact' },
-  ]
-
-  const definitionProvider = vscode.languages.registerDefinitionProvider(
-    languageProviders, new Provider(context)
-  )
+  const defProvider = new Provider(context)
+  const definitionProvider = vscode.languages.registerDefinitionProvider({
+    scheme: 'file',
+    pattern: '**/*.{' + possibleExtensions.toString() + '}'
+  }, defProvider)
 
   context.subscriptions.push(definitionProvider)
 }
