@@ -128,6 +128,8 @@ export class Provider {
           uri,
         }
 
+        console.log('URI >>>', uri)
+
         return uri
       }
     } else {
@@ -143,6 +145,8 @@ export class Provider {
           ...this.cacheUri,
           uri,
         }
+
+        console.log('URI >>>', uri)
 
         return uri
       }
