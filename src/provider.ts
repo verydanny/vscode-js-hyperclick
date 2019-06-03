@@ -111,8 +111,6 @@ export class Provider {
     range: vscode.Range
   ) {
     const checkIfThisIsDir = join(directory.path, dir.base)
-
-    console.log(checkIfThisIsDir)
     
     if (
       isDirectory(checkIfThisIsDir)
@@ -120,29 +118,33 @@ export class Provider {
       const getTheUriWithIndex = findFile(checkIfThisIsDir, 'index')
 
       if (getTheUriWithIndex) {
-        const uri = vscode.Uri.file(getTheUriWithIndex)
-        const location = new vscode.Location(uri, range ? range : this.range)
+        const uri = new vscode.Location(
+          vscode.Uri.file(getTheUriWithIndex),
+          range ? range : this.range
+        )
 
         this.cacheUri = {
           ...this.cacheUri,
-          uri: location,
+          uri,
         }
 
-        return location
+        return uri
       }
     } else {
       const getTheFileUri = findFile(directory.path, dir.base)
 
       if (getTheFileUri) {
-        const uri = vscode.Uri.file(getTheFileUri)
-        const location = new vscode.Location(uri, range ? range : this.range)
+        const uri = new vscode.Location(
+          vscode.Uri.file(getTheFileUri),
+          range ? range : this.range
+        )
 
         this.cacheUri = {
           ...this.cacheUri,
-          uri: location,
+          uri,
         }
 
-        return location
+        return uri
       }
     }
   }
