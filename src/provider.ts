@@ -52,7 +52,7 @@ export class Provider {
       this.directoryLayout = this.context.workspaceState.get(
         this.workspaceName
       )
-
+      
       const importLine = document.lineAt(position)
       const importUrl = extractImportPathFromTextLine(
         importLine
@@ -89,6 +89,9 @@ export class Provider {
       ) {
         for (const directoryQueryOption of directory.options) {
           if (dir === directoryQueryOption) {
+            // Later push this to array if there are more than 1 matches
+            // or maybe use vscode's workspace file searcher to find
+            // matches instead?
             return this.testForFileValidity(
               directory,
               parsedImportPath,
@@ -108,6 +111,8 @@ export class Provider {
     range: vscode.Range
   ) {
     const checkIfThisIsDir = join(directory.path, dir.base)
+
+    console.log(checkIfThisIsDir)
     
     if (
       isDirectory(checkIfThisIsDir)

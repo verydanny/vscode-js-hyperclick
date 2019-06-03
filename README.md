@@ -65,11 +65,14 @@ Use the following `tsconfig.json` settings to help this out. After initial TS "b
 
 ## Known Issues
 
-In a TypeScript/JavaScript mixed project, when one opens a JS file it attempts to infer paths and aliases which may create a race condition. A solution is to `allowJs` and `checkJs` in the tsconfig.json file.
+In a TypeScript/JavaScript mixed project, when one opens a JS file it attempts to build a configuration. This configuration can slow. It sometimes re-runs the configuration on a new JS file. TSServer is a mess. 
+
+A solution is to `allowJs` and `checkJs` in the tsconfig.json file.
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+0.0.2 - Fix RegExp Bug
+0.0.1 - Just trying to get it on the market
 
 ### 1.0.0
 

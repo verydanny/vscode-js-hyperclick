@@ -20,7 +20,10 @@ export function extractImportPathFromTextLine(textLine: vscode.TextLine): { path
     /import\s+.*\s+from\s+['"](.*)['"]/,
     /import\s*\(['"](.*)['"]\)/,
     /require\s*\(['"](.*)['"]\)/,
-    /import\s+['"](.*)['"]/
+    /import\s+['"](.*)['"]/,
+    /}\sfrom\s+['"](.*)['"]/,
+    /\sfrom\s+['"](.*)['"]/,
+    /from\s+['"](.*)['"]/
   ]
 
   for (const pathReg of pathRegs) {
