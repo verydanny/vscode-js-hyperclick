@@ -1,51 +1,101 @@
+import { parse, ParsedPath } from 'path'
+
 import * as vscode from 'vscode'
+import { fdir as Fdir, Group } from 'fdir'
 
-import { parsePathForDirs } from './utils'
+import {
+  createAliasListForThisDir,
+  createFileAliasListForAliases,
+} from './utils'
 
-export type StorageBin = {
-  name: string,
-  data: import('./utils').DirlistT[]
-}[]
+export interface GroupExtended extends Group {
+  fullPath: string
+  hasIndex: boolean
+  indexValues: string[]
+}
 
-export type FormatWorkspaceData = {
-  name: string;
-  fsDir: string;
-}[]
+export type StorageBinData = Array<
+  [string[], Array<string | ParsedPath>, GroupExtended]
+>
 
-/**
- * 
- * @param workspaces vscode.WorkspaceFolder[]
- * @description Just extracts the name and fs-compatible absolute path for the workspace
- */
-const formatWorkspaceData = (workspaces: vscode.WorkspaceFolder[]) =>
-  workspaces.map(({ name, uri }) => ({
-    name,
-    fsDir: uri.fsPath,
-  }))
+export type StorageBin = Array<{
+  name: string
+  // data: Array<import('./utils').DirlistT>
+  data: StorageBinData
+}>
 
-async function buildFolderStructure(workspaces: vscode.WorkspaceFolder[] | undefined) {
+export type FormatWorkspaceData = Array<{
+  name: string
+  fsDir: string
+}>
+
+export async function buildWorkplaceLayout(
+  openWorkspaces: ReadonlyArray<vscode.WorkspaceFolder>
+) {
   const storageBin: StorageBin = []
 
-  if (workspaces) {
-    const formattedWorkspaceData = formatWorkspaceData(workspaces)
+  if (openWorkspaces) {
+    for (const { name, uri } of openWorkspaces) {
+      const fsPath = uri.fsPath
 
-    // This might be possible to break into 2 worker threads. One scans 1 directory
-    // And the other can scan the other
-    for (const { fsDir, name } of formattedWorkspaceData) {
+      const sorted = new Fdir()
+        .crawlWithOptions(fsPath, {
+          group: true,
+          exclude(dirPath) {
+            return dirPath.includes('node_modules') || dirPath.includes('.git')
+          },
+        })
+        .withPromise()
+
       storageBin.push({
         name,
-        data: await parsePathForDirs(fsDir, [], fsDir)
+        data: (await sorted).map((item) => {
+          const fileIndexValues = item.files.filter((file) => {
+            if (parse(file).name === 'index') {
+              return true
+            }
+
+            return false
+          })
+
+          if (item.dir === fsPath) {
+            return [
+              item.files,
+              createFileAliasListForAliases(['/'], item.files),
+              {
+                ...item,
+                dir: '.',
+                fullPath: item.dir,
+                hasIndex: fileIndexValues.length > 0,
+                indexValues: fileIndexValues,
+              },
+            ]
+          }
+
+          const splitNormalized = item.dir.split(`${fsPath}/`).join('')
+          const folderSearchTerms = createAliasListForThisDir(
+            splitNormalized.split('/')
+          )
+          const fileSearchTerms = createFileAliasListForAliases(
+            folderSearchTerms,
+            item.files
+          )
+
+          return [
+            folderSearchTerms,
+            fileSearchTerms,
+            {
+              ...item,
+              dir: splitNormalized,
+              fullPath: item.dir,
+              hasIndex: fileIndexValues.length > 0,
+              indexValues: fileIndexValues,
+            },
+          ]
+        }),
       })
     }
   }
 
   return storageBin
-}
-
-const workspaceFolders = Symbol('workspaceFolders')
-
-export class WorkspaceDirectoryHelper {
-  readonly [workspaceFolders] = vscode.workspace.workspaceFolders
-
-  buildWorkplaceLayout = () => buildFolderStructure(this[workspaceFolders])
 }

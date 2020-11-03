@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		"module": "commonjs",
-		"target": "es2017",
+		"target": "es2018",
 		"outDir": "out",
 		"lib": [
 			"esnext"
@@ -21,5 +21,9 @@
 	"exclude": [
 		"node_modules",
 		".vscode-test"
+	],
+	"include": [
+		"types/**/*",
+		"src/**/*"
 	]
 }

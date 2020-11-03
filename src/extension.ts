@@ -1,30 +1,58 @@
-import * as vscode from 'vscode'
+/* eslint-disable promise/catch-or-return */
+import vscode from 'vscode'
+
 import { possibleExtensions } from './utils'
 import { Provider } from './provider'
-import { WorkspaceDirectoryHelper } from './workspace'
+import { buildWorkplaceLayout } from './workspace'
 
-export async function activate(context: vscode.ExtensionContext) {
-  ////
-  // This is costly so we want to store the results in VScode 
-  // workspace storage. Maybe cache it in VScode global storage under
-  // a UUID/HASH? Thought for later
-  ////
-  const WorkspaceHelper = new WorkspaceDirectoryHelper()
-  const Workspaces = await WorkspaceHelper.buildWorkplaceLayout()
+export function activate(context: vscode.ExtensionContext) {
+  const schema = {
+    scheme: 'file',
+    pattern: `**/*.{${possibleExtensions.toString()}}`,
+  }
+  const defProvider = new Provider(context)
+  // //
+  // This is costly so we want to store the results in VScode
+  // workspace storage.
+  // //
+  async function updateFileCache() {
+    const openWorkspaces = vscode.workspace.workspaceFolders
 
-  if (Workspaces) {
-    for (const { name, data } of Workspaces) {
-      context.workspaceState.update(name, data)
+    if (openWorkspaces) {
+      const Workspaces = await buildWorkplaceLayout(openWorkspaces)
+
+      if (Workspaces) {
+        for (const { name, data } of Workspaces) {
+          context.workspaceState.update(name, data)
+        }
+      }
     }
   }
 
-  const defProvider = new Provider(context)
-  const definitionProvider = vscode.languages.registerDefinitionProvider({
-    scheme: 'file',
-    pattern: '**/*.{' + possibleExtensions.toString() + '}'
-  }, defProvider)
+  const definitionProvider = vscode.languages.registerDefinitionProvider(
+    schema,
+    defProvider
+  )
+  const onSwitchWorkplace = vscode.workspace.onDidChangeWorkspaceFolders(
+    updateFileCache
+  )
+  const onDidCreateFiles = vscode.workspace.onDidCreateFiles(updateFileCache)
+  const onDidDeleteFiles = vscode.workspace.onDidDeleteFiles(updateFileCache)
+  const onDidRenameFiles = vscode.workspace.onDidRenameFiles(updateFileCache)
+  const onDidChangeConfig = vscode.workspace.onDidChangeConfiguration(
+    updateFileCache
+  )
 
   context.subscriptions.push(definitionProvider)
+  updateFileCache().then(() =>
+    context.subscriptions.push(
+      onDidCreateFiles,
+      onDidDeleteFiles,
+      onDidRenameFiles,
+      onDidChangeConfig,
+      onSwitchWorkplace
+    )
+  )
 }
 
 export function deactivate() {}
