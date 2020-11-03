@@ -7,8 +7,14 @@
 		"vscode": "^1.50.0",
 		"node": ">=12.0.0"
 	},
+	"author": {
+		"name": "Daniil Veremchuk"
+	},
 	"repository": {
 		"url": "https://github.com/verydanny/vscode-js-hyperclick"
+	},
+	"bugs": {
+		"url": "https://github.com/verydanny/vscode-js-hyperclick/issues"
 	},
 	"keywords": [
 		"hyperclick",
