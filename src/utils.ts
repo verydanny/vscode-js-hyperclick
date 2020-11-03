@@ -40,7 +40,12 @@ export const createFileAliasListForAliases = (
     for (let fi = 0; fi < filesArray.length; fi++) {
       const currentFile = parse(filesArray[fi])
 
-      result.push(`${currentFolder}/${currentFile.name}`, currentFile)
+      result.push(
+        `${currentFolder}/${currentFile.name}`,
+        currentFile,
+        `${currentFolder}/${currentFile.base}`,
+        currentFile
+      )
     }
   }
 

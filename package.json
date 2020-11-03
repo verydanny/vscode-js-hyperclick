@@ -1,6 +1,6 @@
 {
-	"name": "js-hyperclick",
-	"displayName": "JS Hyperclick",
+	"name": "smart-goto",
+	"displayName": "Smart JS GoTo",
 	"description": "This extension lets you jump to your files, even if they're aliased through webpack, typescript, or other tools. If you don't specify aliases in your vscode workspace config, then it attempts to deduce them by building a virtual directory structure.",
 	"version": "0.0.2",
 	"engines": {
@@ -10,6 +10,18 @@
 	"repository": {
 		"url": "https://github.com/verydanny/vscode-js-hyperclick"
 	},
+	"keywords": [
+		"hyperclick",
+		"goto",
+		"js-hyperclick",
+		"definitions",
+		"intellisense"
+	],
+	"icon": "icon.png",
+	"galleryBanner": {
+    "color": "#fbfbfb",
+    "theme": "light"
+  },
 	"publisher": "verydanny",
 	"categories": [
 		"Other"
@@ -18,9 +30,24 @@
 		"*"
 	],
 	"main": "./out/extension.js",
+	"contributes": {
+		"configuration": {
+			"title": "Smart GoTo",
+			"properties": {
+				"smart-goto.ignoreFolders": {
+					"type": "array",
+					"description": "List of folders to skip indexing in project. This can speed up GoTo significantly",
+					"default": [
+						"node_modules",
+						".git"
+					]
+				}
+			}
+		}
+	},
 	"scripts": {
 		"vscode:prepublish": "yarn run compile",
-		"compile": "tsc -p ./",
+		"compile": "esbuild ./src/extension.ts --bundle --outfile=./out/extension.js --platform=node --target=node12 --external:vscode --minify --sourcemap",
 		"lint": "eslint . --ext .ts,.tsx",
 		"watch": "tsc -watch -p ./"
 	},
@@ -32,6 +59,7 @@
 		"@types/parse-gitignore": "^1.0.0",
 		"@types/picomatch": "^2.2.1",
 		"@types/vscode": "^1.50.0",
+		"esbuild": "^0.8.2",
 		"eslint": "^7.12.1",
 		"typescript": "^4.0.5"
 	},

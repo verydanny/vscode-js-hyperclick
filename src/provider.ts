@@ -1,4 +1,5 @@
-/* eslint-disable promise/catch-or-return */
+/* eslint-disable @typescript-eslint/prefer-includes */
+/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/prefer-for-of */
 import { parse as parsePath, ParsedPath, resolve } from 'path'
 
@@ -23,18 +24,13 @@ export class Provider {
   documentUri?: vscode.Uri
   workspaceName?: string
   directoryLayout?: Array<import('./workspace').StorageBinData>
-  cacheUri: {
-    code: string
-    uri?: vscode.Location
-  }
+  cacheList: Map<string, vscode.Location>
 
   range = new vscode.Range(0, 0, 0, 0)
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context
-    this.cacheUri = {
-      code: '',
-    }
+    this.cacheList = new Map()
   }
 
   provideDefinition(document: vscode.TextDocument, position: vscode.Position) {
@@ -45,6 +41,11 @@ export class Provider {
     const directoryLayout: StorageBinData | undefined = workspaceName?.name
       ? this.context.workspaceState.get(workspaceName.name)
       : undefined
+    const cachedLocation = this.cacheList.get(importLine.text)
+
+    if (cachedLocation) {
+      return cachedLocation
+    }
 
     try {
       const { tokens } = parse(importLine.text, true, true, false)
@@ -104,6 +105,7 @@ export class Provider {
         importNormalized.type &&
         directoryLayout
       ) {
+        const worstCaseRegex = new RegExp(importNormalized.path)
         let match: Match = {
           file: false,
           term: null,
@@ -130,24 +132,31 @@ export class Provider {
 
           for (let fi = 0; fi < fileSearchTerms.length; fi++) {
             const fileTerm = fileSearchTerms[fi]
+            const fileInformation = fileSearchTerms[fi + 1]
 
-            if (
-              typeof fileTerm === 'string' &&
-              fileTerm === importNormalized.path
-            ) {
-              const fileInformation = fileSearchTerms[fi + 1]
+            if (typeof fileInformation === 'object') {
+              if (
+                typeof fileTerm === 'string' &&
+                fileTerm === importNormalized.path
+              ) {
+                if (typeof fileInformation === 'object') {
+                  match = {
+                    ...fileInfo,
+                    term: null,
+                    file: fileInformation,
+                  }
+                }
 
-              if (typeof fileInformation === 'object') {
+                break
+              }
+
+              if (typeof fileTerm === 'string' && worstCaseRegex.test(fileTerm)) {
                 match = {
                   ...fileInfo,
                   term: null,
-                  file: {
-                    ...fileInformation,
-                  },
+                  file: fileInformation
                 }
               }
-
-              break
             }
           }
         }
@@ -158,8 +167,11 @@ export class Provider {
             vscode.Uri.parse(match.fullPath),
             match.file.base
           )
+          const Location = new vscode.Location(query, this.range)
 
-          return new vscode.Location(query, this.range)
+          this.cacheList.set(importLine.text, Location)
+
+          return Location
         }
 
         if (
@@ -173,7 +185,11 @@ export class Provider {
             match.indexValues.join('')
           )
 
-          return new vscode.Location(query, this.range)
+          const Location = new vscode.Location(query, this.range)
+
+          this.cacheList.set(importLine.text, Location)
+
+          return Location
         }
 
         if (!match.file && !match.term) {
@@ -185,35 +201,20 @@ export class Provider {
               importNormalized.path
             )
 
-            return new vscode.Location(query, this.range)
+            const Location = new vscode.Location(query, this.range)
+
+            this.cacheList.set(importLine.text, Location)
+
+            return Location
           }
-
-          const { dir, name } = parsePath(
-            resolve(currentFolder.fsPath, importNormalized.path)
-          )
-          const vscodeUriRelativeDir = vscode.Uri.parse(dir)
-
-          // Too slow, better to just use something else in future
-          return vscode.workspace.fs
-            .readDirectory(vscode.Uri.parse(dir))
-            .then((dirResults) => {
-              const filtered = dirResults
-                .filter((res) => res[0].includes(name))
-                .join('')
-                .split(',1')
-                .join('')
-
-              if (filtered) {
-                return new vscode.Location(
-                  vscode.Uri.joinPath(vscodeUriRelativeDir, filtered),
-                  this.range
-                )
-              }
-            })
         }
       }
+
+      return undefined
     } catch {
       // Silent Fail
     }
+
+    return undefined
   }
 }
