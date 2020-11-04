@@ -3,8 +3,33 @@
 	"displayName": "Smart JS GoTo",
 	"description": "This extension lets you jump to your files, even if they're aliased through webpack, typescript, or other tools. If you don't specify aliases in your vscode workspace config, then it attempts to deduce them by building a virtual directory structure.",
 	"version": "0.3.0",
+	"engines": {
+		"vscode": "^1.50.0"
+	},
 	"author": {
 		"name": "Daniil Veremchuk"
+	},
+	"categories": [
+		"Other"
+	],
+	"main": "./out/extension.js",
+	"activationEvents": [
+		"*"
+	],
+	"contributes": {
+		"configuration": {
+			"title": "Smart GoTo",
+			"properties": {
+				"smart-goto.ignoreFolders": {
+					"type": "array",
+					"description": "List of folders to skip indexing in project. This can speed up GoTo significantly",
+					"default": [
+						"node_modules",
+						".git"
+					]
+				}
+			}
+		}
 	},
 	"scripts": {
 		"clean": "rm -rf ./out",
@@ -12,10 +37,6 @@
 		"compile": "yarn clean && yarn esbuild ./src/extension.ts --bundle --platform=node --target=node12 --minify --sourcemap --external:vscode --define:process.env.NODE_ENV='\"production\"' --outfile=./out/extension.js",
 		"lint": "eslint . --ext .ts,.tsx",
 		"watch": "tsc -watch -p ./"
-	},
-	"engines": {
-		"vscode": "^1.50.0",
-		"node": ">=12.0.0"
 	},
 	"repository": {
 		"url": "https://github.com/verydanny/vscode-js-hyperclick"
@@ -35,29 +56,6 @@
 		"color": "#fbfbfb",
 		"theme": "light"
 	},
-	"publisher": "verydanny",
-	"categories": [
-		"Other"
-	],
-	"activationEvents": [
-		"*"
-	],
-	"main": "./out/extension.js",
-	"contributes": {
-		"configuration": {
-			"title": "Smart GoTo",
-			"properties": {
-				"smart-goto.ignoreFolders": {
-					"type": "array",
-					"description": "List of folders to skip indexing in project. This can speed up GoTo significantly",
-					"default": [
-						"node_modules",
-						".git"
-					]
-				}
-			}
-		}
-	},
 	"devDependencies": {
 		"@torpedus/eslint-plugin": "^1.2.1",
 		"@types/is-absolute": "^1.0.0",
@@ -68,11 +66,8 @@
 		"@types/vscode": "^1.50.0",
 		"esbuild": "^0.8.2",
 		"eslint": "^7.12.1",
-		"typescript": "^4.0.5"
-	},
-	"license": "MIT",
-	"dependencies": {
 		"fdir": "^4.1.0",
-		"sucrase": "^3.16.0"
+		"sucrase": "^3.16.0",
+		"typescript": "^4.0.5"
 	}
 }

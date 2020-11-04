@@ -1,4 +1,3 @@
-/* eslint-disable promise/catch-or-return */
 import vscode from 'vscode'
 
 import { possibleExtensions } from './utils'
@@ -19,10 +18,10 @@ export function activate(context: vscode.ExtensionContext) {
     const openWorkspaces = vscode.workspace.workspaceFolders
 
     if (openWorkspaces) {
-      const Workspaces = await buildWorkplaceLayout(openWorkspaces)
+      const workspaces = await buildWorkplaceLayout(openWorkspaces)
 
-      if (Workspaces) {
-        for (const { name, data } of Workspaces) {
+      if (workspaces) {
+        for (const { name, data } of workspaces) {
           context.workspaceState.update(name, data)
         }
       }

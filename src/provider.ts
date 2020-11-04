@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/prefer-for-of */
 import { performance } from 'perf_hooks'
 import { parse as pathParse, ParsedPath } from "path"
@@ -144,13 +143,13 @@ export class Provider {
             vscode.Uri.parse(match.fullPath),
             match.file.base
           )
-          const Location = new vscode.Location(query, this.range)
+          const location = new vscode.Location(query, this.range)
 
-          this.cacheList.set(importLine.text, Location)
+          this.cacheList.set(importLine.text, location)
 
           const safeDone = performance.now()
           console.log('safeDone',  safeDone - start)
-          return Location
+          return location
         }
 
         // Doesn't have file extension, probably aliased
@@ -162,13 +161,13 @@ export class Provider {
                 match.file.base
               )
   
-              const Location = new vscode.Location(query, this.range)
+              const location = new vscode.Location(query, this.range)
   
-              this.cacheList.set(importLine.text, Location)
+              this.cacheList.set(importLine.text, location)
   
               const unsafeFileExt = performance.now()
               console.log('unsafeFileExt', unsafeFileExt - start)
-              return Location
+              return location
             }
 
             if (pathParseImport.base === match.file.name) {
@@ -177,13 +176,13 @@ export class Provider {
                 match.file.base
               )
   
-              const Location = new vscode.Location(query, this.range)
+              const location = new vscode.Location(query, this.range)
   
-              this.cacheList.set(importLine.text, Location)
+              this.cacheList.set(importLine.text, location)
   
               const unsafeFileNotIndexDone = performance.now()
               console.log('unsafeFileNotIndexDone', unsafeFileNotIndexDone - start)
-              return Location
+              return location
             }
 
             const query = vscode.Uri.joinPath(
@@ -191,13 +190,13 @@ export class Provider {
               match.indexValues!.join('')
             )
 
-            const Location = new vscode.Location(query, this.range)
+            const location = new vscode.Location(query, this.range)
 
-            this.cacheList.set(importLine.text, Location)
+            this.cacheList.set(importLine.text, location)
 
             const unsafeIndexDone = performance.now()
             console.log('unsafeIndexDone', unsafeIndexDone - start)
-            return Location
+            return location
           }
         }
       }
@@ -208,13 +207,13 @@ export class Provider {
           match.indexValues!.join("")
         )
 
-        const Location = new vscode.Location(query, this.range)
+        const location = new vscode.Location(query, this.range)
 
-        this.cacheList.set(importLine.text, Location)
+        this.cacheList.set(importLine.text, location)
 
         const noFileDone = performance.now()
         console.log('noFileDone', noFileDone - start)
-        return Location
+        return location
       }
 
       if (!match.file && !match.folderTerm) {
@@ -226,13 +225,13 @@ export class Provider {
             importParsed.path
           )
 
-          const Location = new vscode.Location(query, this.range)
+          const location = new vscode.Location(query, this.range)
 
-          this.cacheList.set(importLine.text, Location)
+          this.cacheList.set(importLine.text, location)
 
           const noFolderTermOrFileDone = performance.now()
           console.log('noFolderTermOrFileDone', noFolderTermOrFileDone - start)
-          return Location
+          return location
         }
       }
     }
