@@ -1,9 +1,16 @@
 # Smart Goto
 
+VSCode extension that attempts to deduce aliased module paths.
+
 [How To Use](readme/example1.gif)
 
-VSCode extension that attempts to deduce aliased module paths. Sometimes aliases are defined in webpack, Typescript settings, or
-babel to avoid relative imports. I will not argue if this is right or wrong (it's wrong), but I got tired of having to copy/paste the paths and type it into vscode's fuzzy search for certain projects I was working on.
+# Usage
+
+1. Install plugin
+2. CMD/CTRL + Click, F12, or right click -> Go To Definition on import paths
+
+# Information
+Sometimes aliases are defined in webpack, Typescript settings, or babel to avoid relative imports. I will not argue if this is right or wrong (it's wrong), but I got tired of having to copy/paste the paths and type it into vscode's fuzzy search for certain projects I was working on.
 
 If you’re not familiar with the concept of aliasing, it turns a file like this:
 
