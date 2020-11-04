@@ -28,30 +28,25 @@ import MyComponent from 'components/MyComponent'
 - **Automatic aliases deduction**  
 `apps/components/core -> /Users/example/source/app-name/src/apps/components/core/index.js`
 - **Finds and locates `index` files**
-- **Pretty fast**  
-  - I haven't tested massive projects, but it takes about 90ms to boot up for a project with 1200 directories
+- **Finds and opens files when extension provided**
+- **Faster than tsserver in most cases**
 - **Coming Soon**:
   - Automatic `baseDir` inference based on `tsconfig.json`
   - Automatic `baseDir` inference based on `package.json` having a `moduleRoots` property
 
+## In Development
 
-## Requirements
+1. Right now, I don't support weird aliases like `@components`. I plan on adding support for that soon.
+2. Use of `jsconfig.json` and `tsconfig.json`. If you have paths/basePaths configured there, it'll work for all JS/TS
+3. Support for more extensions
+4. Custom config for aliasing in `.vscode/settings.json` config:
 
-If you have a mixed TypeScript/JavaScript folder structure, you might suffer performance issues because TypeScrip still attempts to configure the JS files under the `tsconfig.json` file. 
-
-Use the following `tsconfig.json` settings to help this out. After initial TS "boot up", it should be fine.
-
-```js
+```json
 {
-  ...,
-  allowJs: true,
-  checkJs: true,
-  ...
+  "smart-goto.paths": {
+    "@components": "src/components"
+  }
 }
 ```
 
-## Extension Settings
-
-### `smart-goto.ignoreFolders`: `String[]` `(Default: ['node_modules', '.git'])` - List of folders to not index. By default vscode is pretty good at locating node_module stuff.
-
-### `smart-goto.extensions`: `String[]` `(Default: ['ts', 'tsx', 'js', 'jsx'])` - List of file extensions you want this extension to work in.
+This will speed up resolution/linking by a massive amount.

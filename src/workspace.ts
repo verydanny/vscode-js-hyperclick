@@ -1,7 +1,7 @@
 import { parse, ParsedPath } from 'path'
-
+import { performance } from 'perf_hooks'
 import * as vscode from 'vscode'
-import { fdir as Fdir, Group } from 'fdir'
+import { fdir as Fdir, Group, Output } from 'fdir'
 
 import {
   createAliasListForThisDir,
@@ -29,6 +29,59 @@ export type FormatWorkspaceData = Array<{
   fsDir: string
 }>
 
+function sortIntoDirStructure(dirs: Output, fsPath: string) {
+  const startSort = performance.now()
+
+  const result = dirs.map((item) => {
+    const fileIndexValues = item.files.filter((file) => {
+      if (parse(file).name === 'index') {
+        return true
+      }
+
+      return false
+    })
+
+    if (item.dir === fsPath) {
+      return [
+        item.files,
+        createFileAliasListForAliases(['/'], item.files),
+        {
+          ...item,
+          dir: '.',
+          fullPath: item.dir,
+          hasIndex: fileIndexValues.length > 0,
+          indexValues: fileIndexValues,
+        },
+      ]
+    }
+
+    const splitNormalized = item.dir.split(`${fsPath}/`).join('')
+    const folderSearchTerms = createAliasListForThisDir(
+      splitNormalized.split('/')
+    )
+    const fileSearchTerms = createFileAliasListForAliases(
+      folderSearchTerms,
+      item.files
+    )
+
+    return [
+      folderSearchTerms,
+      fileSearchTerms,
+      {
+        ...item,
+        dir: splitNormalized,
+        fullPath: item.dir,
+        hasIndex: fileIndexValues.length > 0,
+        indexValues: fileIndexValues,
+      },
+    ]
+  })
+
+  console.log('sortTime', performance.now() - startSort)
+
+  return result as StorageBinData
+}
+
 export async function buildWorkplaceLayout(
   openWorkspaces: ReadonlyArray<vscode.WorkspaceFolder>
 ) {
@@ -45,54 +98,13 @@ export async function buildWorkplaceLayout(
             return dirPath.includes('node_modules') || dirPath.includes('.git')
           },
         })
-        .withPromise()
+        .withPromise() as any as Promise<Output>
+
+      const data = sortIntoDirStructure(await sorted, fsPath)
 
       storageBin.push({
         name,
-        data: (await sorted).map((item) => {
-          const fileIndexValues = item.files.filter((file) => {
-            if (parse(file).name === 'index') {
-              return true
-            }
-
-            return false
-          })
-
-          if (item.dir === fsPath) {
-            return [
-              item.files,
-              createFileAliasListForAliases(['/'], item.files),
-              {
-                ...item,
-                dir: '.',
-                fullPath: item.dir,
-                hasIndex: fileIndexValues.length > 0,
-                indexValues: fileIndexValues,
-              },
-            ]
-          }
-
-          const splitNormalized = item.dir.split(`${fsPath}/`).join('')
-          const folderSearchTerms = createAliasListForThisDir(
-            splitNormalized.split('/')
-          )
-          const fileSearchTerms = createFileAliasListForAliases(
-            folderSearchTerms,
-            item.files
-          )
-
-          return [
-            folderSearchTerms,
-            fileSearchTerms,
-            {
-              ...item,
-              dir: splitNormalized,
-              fullPath: item.dir,
-              hasIndex: fileIndexValues.length > 0,
-              indexValues: fileIndexValues,
-            },
-          ]
-        }),
+        data,
       })
     }
   }

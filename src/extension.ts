@@ -1,11 +1,11 @@
 import * as vscode from 'vscode'
 
+import { performance } from 'perf_hooks'
 import { possibleExtensions } from './utils'
 import { Provider } from './provider'
 import { buildWorkplaceLayout } from './workspace'
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log(vscode.extensions.getExtension('vscode.typescript-language-features')?.exports)
   const schema = {
     scheme: 'file',
     pattern: `**/*.{${possibleExtensions.toString()}}`,
@@ -20,7 +20,10 @@ export function activate(context: vscode.ExtensionContext) {
     const openWorkspaces = vscode.workspace.workspaceFolders
 
     if (openWorkspaces) {
+      const startDir = performance.now()
       const workspaces = await buildWorkplaceLayout(openWorkspaces)
+      const doneDir = performance.now()
+      console.log('doneDir', doneDir - startDir)
 
       if (workspaces) {
         for (const { name, data } of workspaces) {

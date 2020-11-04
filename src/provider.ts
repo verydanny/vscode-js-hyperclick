@@ -50,6 +50,7 @@ export class Provider {
 
     const start = performance.now()
     const importParsed = getParsedImport(importLine, document)
+    console.log('TokenizedImportDone', performance.now() - start)
 
     if (importParsed && directoryLayout) {
       const worstCaseRegex = new RegExp(importParsed.path)
