@@ -35,7 +35,7 @@
 	"scripts": {
 		"clean": "rm -rf ./out",
 		"vscode:prepublish": "yarn run compile",
-		"compile": "yarn clean && yarn esbuild ./src/extension.ts --bundle --platform=node --target=node12 --minify --sourcemap --external:vscode --define:process.env.NODE_ENV='\"production\"' --outfile=./out/extension.js",
+		"compile": "yarn clean && yarn esbuild ./src/extension.ts --bundle --platform=node --target=node10.4 --minify --sourcemap --external:vscode --define:process.env.NODE_ENV='\"production\"' --outfile=./out/extension.js",
 		"lint": "eslint . --ext .ts,.tsx",
 		"watch": "tsc -watch -p ./"
 	},
