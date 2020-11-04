@@ -1,8 +1,6 @@
-# js-hyperclick
+# Smart Goto
 
 [How To Use](readme/example1.gif)
-
-### **WIP - This is a work in progress**
 
 VSCode extension that attempts to deduce aliased module paths. Sometimes aliases are defined in webpack, Typescript settings, or
 babel to avoid relative imports. I will not argue if this is right or wrong (it's wrong), but I got tired of having to copy/paste the paths and type it into vscode's fuzzy search for certain projects I was working on.
@@ -54,26 +52,6 @@ Use the following `tsconfig.json` settings to help this out. After initial TS "b
 
 ## Extension Settings
 
-**SOON**
+### `smart-goto.ignoreFolders`: `String[]` `(Default: ['node_modules', '.git'])` - List of folders to not index. By default vscode is pretty good at locating node_module stuff.
 
-**`jsHyperclick.supportedFiletypes`**: **`string[]`** - An array of extensions js-hyperclick will attempt to resolve. More extensions means longer resolution. Try not to go overboard here.  
->example: `['js', 'vue', 'jsx']`  
-
-<br/>
-
-**`jsHyperclick.tsConfigLocation`** : **`string[]`** - Path of tsConfig (only if it's not at root)
-
-## Known Issues
-
-In a TypeScript/JavaScript mixed project, when one opens a JS file it attempts to build a configuration. This configuration can slow. It sometimes re-runs the configuration on a new JS file. TSServer is a mess. 
-
-A solution is to `allowJs` and `checkJs` in the tsconfig.json file.
-
-## Release Notes
-
-0.0.2 - Fix RegExp Bug
-0.0.1 - Just trying to get it on the market
-
-### 1.0.0
-
-Initial release of jsHyperclick
+### `smart-goto.extensions`: `String[]` `(Default: ['ts', 'tsx', 'js', 'jsx'])` - List of file extensions you want this extension to work in.

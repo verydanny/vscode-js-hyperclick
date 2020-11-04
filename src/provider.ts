@@ -1,29 +1,26 @@
-/* eslint-disable @typescript-eslint/prefer-includes */
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/prefer-for-of */
-import { parse as parsePath, ParsedPath, resolve } from 'path'
+import { performance } from 'perf_hooks'
+import { parse as pathParse, ParsedPath } from "path"
 
-import { parse } from 'sucrase/dist/parser'
-import * as vscode from 'vscode'
+import * as vscode from "vscode"
 
-import { GroupExtended, StorageBinData } from './workspace'
-
-interface ImportType {
-  type: 'import' | 'require' | null
-  path: string | null
-  range: vscode.Range | null
-}
+import { getParsedImport } from "./utils"
+import { GroupExtended, StorageBinData } from "./workspace"
 
 type Match = {
   file: boolean | ParsedPath
-  term: string | null
+  folderTerm: string | null
+  unsafe: boolean
+  fileExtension: string | boolean
+  isAliased: boolean
 } & Partial<GroupExtended>
 
 export class Provider {
   context: vscode.ExtensionContext
   documentUri?: vscode.Uri
   workspaceName?: string
-  directoryLayout?: Array<import('./workspace').StorageBinData>
+  directoryLayout?: Array<import("./workspace").StorageBinData>
   cacheList: Map<string, vscode.Location>
 
   range = new vscode.Range(0, 0, 0, 0)
@@ -33,12 +30,17 @@ export class Provider {
     this.cacheList = new Map()
   }
 
-  provideDefinition(document: vscode.TextDocument, position: vscode.Position) {
+  provideDefinition(
+    document: vscode.TextDocument,
+    position: vscode.Position
+  ) {
     const URI = document.uri
-    const currentFolder = vscode.Uri.joinPath(URI, '../')
+    const currentFolder = vscode.Uri.joinPath(URI, "../")
     const importLine = document.lineAt(position)
     const workspaceName = vscode.workspace.getWorkspaceFolder(URI)
-    const directoryLayout: StorageBinData | undefined = workspaceName?.name
+    const directoryLayout:
+      | StorageBinData
+      | undefined = workspaceName?.name
       ? this.context.workspaceState.get(workspaceName.name)
       : undefined
     const cachedLocation = this.cacheList.get(importLine.text)
@@ -47,122 +49,97 @@ export class Provider {
       return cachedLocation
     }
 
-    try {
-      const { tokens } = parse(importLine.text, true, true, false)
+    const start = performance.now()
+    const importParsed = getParsedImport(importLine, document)
 
-      enum TokenType {
-        name = 2560,
-        import = 44048,
-        string = 2048,
-        eof = 3072,
+    if (importParsed && directoryLayout) {
+      const worstCaseRegex = new RegExp(importParsed.path)
+      const pathParseImport = pathParse(importParsed.path)
+      let match: Match = {
+        file: false,
+        folderTerm: null,
+        unsafe: false,
+        fileExtension: pathParseImport.ext || false,
+        isAliased: false,
       }
+      let foundFolderTerm = false
+      let foundFileTerm = false
 
-      const importNormalized: ImportType = {
-        type: null,
-        path: null,
-        range: null,
-      }
+      // Begin looping through directories
+      for (let i = 0; i < directoryLayout.length; i++) {
+        const folderSearchTerms = directoryLayout[i][0]
+        const fileSearchTerms = directoryLayout[i][1]
+        const fileInfo = directoryLayout[i][2]
 
-      const range = tokens.filter(({ start, end, type }) => {
-        const slicedString = importLine.text.slice(start, end)
-
-        if (TokenType[type] === 'name' && slicedString === 'require') {
-          importNormalized.type = 'require'
-
-          return true
+        if (foundFileTerm) {
+          break
         }
 
-        if (TokenType[type] === 'import' && slicedString === 'import') {
-          importNormalized.type = 'import'
-
-          return true
+        if (foundFolderTerm) {
+          // optimize later
         }
 
-        if (TokenType[type] === 'string') {
-          importNormalized.path = importLine.text.slice(start + 1, end - 1)
-          importNormalized.range = new vscode.Range(
-            new vscode.Position(importLine.lineNumber, start + 1),
-            new vscode.Position(importLine.lineNumber, end + 1)
-          )
+        // Try to get an exact match on folder. Break if exact folder
+        // match
+        for (let ti = 0; ti < folderSearchTerms.length; ti++) {
+          const folderTerm = folderSearchTerms[ti]
 
-          return true
+          if (importParsed.path === folderTerm) {
+            match = {
+              ...match,
+              ...fileInfo,
+              folderTerm,
+              isAliased: true
+            }
+            foundFolderTerm = true
+
+            break
+          }
         }
+        // End folder loop
 
-        if (TokenType[type] === 'eof') {
-          return true
-        }
+        // Try to get an exact match on fileTerm. Break if exact file
+        // match
+        for (let fi = 0; fi < fileSearchTerms.length; fi++) {
+          const fileTerm = fileSearchTerms[fi]
 
-        return false
-      })
+          if (typeof fileTerm === "string") {
+            const fileInformation = fileSearchTerms[
+              fi + 1
+            ] as ParsedPath
 
-      if (range.length >= 4) {
-        return undefined
-      }
-
-      if (
-        importNormalized.path &&
-        importNormalized.range &&
-        importNormalized.type &&
-        directoryLayout
-      ) {
-        const worstCaseRegex = new RegExp(importNormalized.path)
-        let match: Match = {
-          file: false,
-          term: null,
-        }
-
-        for (let i = 0; i < directoryLayout.length; i++) {
-          const folderSearchTerms = directoryLayout[i][0]
-          const fileSearchTerms = directoryLayout[i][1]
-          const fileInfo = directoryLayout[i][2]
-
-          for (let ti = 0; ti < folderSearchTerms.length; ti++) {
-            const term = folderSearchTerms[ti]
-
-            if (term === importNormalized.path) {
+            if (fileTerm === importParsed.path) {
               match = {
                 ...match,
                 ...fileInfo,
-                term,
+                file: fileInformation,
+                unsafe: false,
+                isAliased: true,
               }
+              foundFileTerm = true
 
               break
-            }
-          }
-
-          for (let fi = 0; fi < fileSearchTerms.length; fi++) {
-            const fileTerm = fileSearchTerms[fi]
-            const fileInformation = fileSearchTerms[fi + 1]
-
-            if (typeof fileInformation === 'object') {
-              if (
-                typeof fileTerm === 'string' &&
-                fileTerm === importNormalized.path
-              ) {
-                if (typeof fileInformation === 'object') {
-                  match = {
-                    ...fileInfo,
-                    term: null,
-                    file: fileInformation,
-                  }
-                }
-
-                break
+            } else if (worstCaseRegex.test(fileTerm)) {
+              // This should be a percentage matcher. We want to unsafe match
+              // to most likely candidate
+              match = {
+                ...match,
+                ...fileInfo,
+                file: fileInformation,
+                unsafe: true,
               }
-
-              if (typeof fileTerm === 'string' && worstCaseRegex.test(fileTerm)) {
-                match = {
-                  ...fileInfo,
-                  term: null,
-                  file: fileInformation
-                }
-              }
+              foundFileTerm = true
             }
           }
         }
+        // End file loop
+      }
+      // End directory loop
 
-        // If it's an index file
-        if (typeof match.file === 'object' && match.fullPath) {
+      // If it's an index file
+      if (typeof match.file === "object" && match.fullPath) {
+        // Not a regex match, probably good
+        if (!match.unsafe) {
           const query = vscode.Uri.joinPath(
             vscode.Uri.parse(match.fullPath),
             match.file.base
@@ -171,48 +148,93 @@ export class Provider {
 
           this.cacheList.set(importLine.text, Location)
 
+          const safeDone = performance.now()
+          console.log('safeDone',  safeDone - start)
           return Location
         }
 
-        if (
-          !match.file &&
-          match.hasIndex &&
-          match.fullPath &&
-          match.indexValues
-        ) {
-          const query = vscode.Uri.joinPath(
-            vscode.Uri.parse(match.fullPath),
-            match.indexValues.join('')
-          )
+        // Doesn't have file extension, probably aliased
+        if (match.unsafe) {
+          if (match.hasIndex && match.file) {
+            if (match.fileExtension) {
+              const query = vscode.Uri.joinPath(
+                vscode.Uri.parse(match.fullPath),
+                match.file.base
+              )
+  
+              const Location = new vscode.Location(query, this.range)
+  
+              this.cacheList.set(importLine.text, Location)
+  
+              const unsafeFileExt = performance.now()
+              console.log('unsafeFileExt', unsafeFileExt - start)
+              return Location
+            }
 
-          const Location = new vscode.Location(query, this.range)
+            if (pathParseImport.base === match.file.name) {
+              const query = vscode.Uri.joinPath(
+                vscode.Uri.parse(match.fullPath),
+                match.file.base
+              )
+  
+              const Location = new vscode.Location(query, this.range)
+  
+              this.cacheList.set(importLine.text, Location)
+  
+              const unsafeFileNotIndexDone = performance.now()
+              console.log('unsafeFileNotIndexDone', unsafeFileNotIndexDone - start)
+              return Location
+            }
 
-          this.cacheList.set(importLine.text, Location)
-
-          return Location
-        }
-
-        if (!match.file && !match.term) {
-          const parsedWeird = parsePath(importNormalized.path)
-
-          if (parsedWeird.ext && /^.*/.test(parsedWeird.dir)) {
             const query = vscode.Uri.joinPath(
-              currentFolder,
-              importNormalized.path
+              vscode.Uri.parse(match.fullPath),
+              match.indexValues!.join('')
             )
 
             const Location = new vscode.Location(query, this.range)
 
             this.cacheList.set(importLine.text, Location)
 
+            const unsafeIndexDone = performance.now()
+            console.log('unsafeIndexDone', unsafeIndexDone - start)
             return Location
           }
         }
       }
 
-      return undefined
-    } catch {
-      // Silent Fail
+      if (!match.file && match.hasIndex && match.fullPath) {
+        const query = vscode.Uri.joinPath(
+          vscode.Uri.parse(match.fullPath),
+          match.indexValues!.join("")
+        )
+
+        const Location = new vscode.Location(query, this.range)
+
+        this.cacheList.set(importLine.text, Location)
+
+        const noFileDone = performance.now()
+        console.log('noFileDone', noFileDone - start)
+        return Location
+      }
+
+      if (!match.file && !match.folderTerm) {
+        const parsedWeird = pathParse(importParsed.path)
+
+        if (parsedWeird.ext && /^.*/.test(parsedWeird.dir)) {
+          const query = vscode.Uri.joinPath(
+            currentFolder,
+            importParsed.path
+          )
+
+          const Location = new vscode.Location(query, this.range)
+
+          this.cacheList.set(importLine.text, Location)
+
+          const noFolderTermOrFileDone = performance.now()
+          console.log('noFolderTermOrFileDone', noFolderTermOrFileDone - start)
+          return Location
+        }
+      }
     }
 
     return undefined

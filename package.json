@@ -3,12 +3,19 @@
 	"displayName": "Smart JS GoTo",
 	"description": "This extension lets you jump to your files, even if they're aliased through webpack, typescript, or other tools. If you don't specify aliases in your vscode workspace config, then it attempts to deduce them by building a virtual directory structure.",
 	"version": "0.2.0",
+	"author": {
+		"name": "Daniil Veremchuk"
+	},
+	"scripts": {
+		"clean": "rm -rf ./out",
+		"vscode:prepublish": "yarn run compile",
+		"compile": "yarn clean && yarn esbuild ./src/extension.ts --bundle --platform=node --target=node12 --minify --sourcemap --external:vscode --define:process.env.NODE_ENV='\"production\"' --outfile=./out/extension.js",
+		"lint": "eslint . --ext .ts,.tsx",
+		"watch": "tsc -watch -p ./"
+	},
 	"engines": {
 		"vscode": "^1.50.0",
 		"node": ">=12.0.0"
-	},
-	"author": {
-		"name": "Daniil Veremchuk"
 	},
 	"repository": {
 		"url": "https://github.com/verydanny/vscode-js-hyperclick"
@@ -50,12 +57,6 @@
 				}
 			}
 		}
-	},
-	"scripts": {
-		"vscode:prepublish": "yarn run compile",
-		"compile": "esbuild ./src/extension.ts --bundle --outfile=./out/extension.js --platform=node --target=node12 --external:vscode --minify --sourcemap",
-		"lint": "eslint . --ext .ts,.tsx",
-		"watch": "tsc -watch -p ./"
 	},
 	"devDependencies": {
 		"@torpedus/eslint-plugin": "^1.2.1",
