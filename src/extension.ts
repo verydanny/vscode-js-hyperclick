@@ -1,14 +1,16 @@
-import vscode from 'vscode'
+import * as vscode from 'vscode'
 
 import { possibleExtensions } from './utils'
 import { Provider } from './provider'
 import { buildWorkplaceLayout } from './workspace'
 
 export function activate(context: vscode.ExtensionContext) {
+  console.log(vscode.extensions.getExtension('vscode.typescript-language-features')?.exports)
   const schema = {
     scheme: 'file',
     pattern: `**/*.{${possibleExtensions.toString()}}`,
   }
+  // vscode.typescript-language-features
   const defProvider = new Provider(context)
   // //
   // This is costly so we want to store the results in VScode

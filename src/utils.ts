@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/prefer-for-of */
 import { join, parse as pathParse } from 'path'
 
-import vscode from 'vscode'
+import * as vscode from 'vscode'
 import { parse, File } from 'sucrase/dist/parser'
 
 export interface DirlistT {
