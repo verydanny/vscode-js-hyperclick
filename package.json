@@ -2,7 +2,7 @@
 	"name": "smart-goto",
 	"displayName": "Smart JS GoTo",
 	"description": "This extension lets you jump to your files, even if they're aliased through webpack, typescript, or other tools. If you don't specify aliases in your vscode workspace config, then it attempts to deduce them by building a virtual directory structure.",
-	"version": "0.6.0",
+	"version": "0.7.0",
 	"engines": {
 		"vscode": "^1.50.0"
 	},
