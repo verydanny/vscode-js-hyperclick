@@ -5,7 +5,7 @@ import { fdir as Fdir, Group, Output } from 'fdir'
 
 import {
   createAliasListForThisDir,
-  createFileAliasListForAliases,
+  createFileAliasListForAliases
 } from './utils'
 
 export interface GroupExtended extends Group {
@@ -29,7 +29,11 @@ export type FormatWorkspaceData = Array<{
   fsDir: string
 }>
 
-function sortIntoDirStructure(dirs: Output, fsPath: string) {
+function sortIntoDirStructure(
+  dirs: Output,
+  fsPath: string,
+  resolvedExt: string[]
+) {
   const startSort = performance.now()
 
   const result = dirs.map((item) => {
@@ -44,14 +48,14 @@ function sortIntoDirStructure(dirs: Output, fsPath: string) {
     if (item.dir === fsPath) {
       return [
         item.files,
-        createFileAliasListForAliases(['/'], item.files),
+        createFileAliasListForAliases(['/'], item.files, resolvedExt),
         {
           ...item,
           dir: '.',
           fullPath: item.dir,
           hasIndex: fileIndexValues.length > 0,
-          indexValues: fileIndexValues,
-        },
+          indexValues: fileIndexValues
+        }
       ]
     }
 
@@ -61,7 +65,8 @@ function sortIntoDirStructure(dirs: Output, fsPath: string) {
     )
     const fileSearchTerms = createFileAliasListForAliases(
       folderSearchTerms,
-      item.files
+      item.files,
+      resolvedExt
     )
 
     return [
@@ -72,8 +77,8 @@ function sortIntoDirStructure(dirs: Output, fsPath: string) {
         dir: splitNormalized,
         fullPath: item.dir,
         hasIndex: fileIndexValues.length > 0,
-        indexValues: fileIndexValues,
-      },
+        indexValues: fileIndexValues
+      }
     ]
   })
 
@@ -83,7 +88,9 @@ function sortIntoDirStructure(dirs: Output, fsPath: string) {
 }
 
 export async function buildWorkplaceLayout(
-  openWorkspaces: ReadonlyArray<vscode.WorkspaceFolder>
+  openWorkspaces: ReadonlyArray<vscode.WorkspaceFolder>,
+  ignoredFolders: string[],
+  resolvedExt: string[]
 ) {
   const storageBin: StorageBin = []
 
@@ -91,20 +98,20 @@ export async function buildWorkplaceLayout(
     for (const { name, uri } of openWorkspaces) {
       const fsPath = uri.fsPath
 
-      const sorted = new Fdir()
+      const sorted = (new Fdir()
         .crawlWithOptions(fsPath, {
           group: true,
           exclude(dirPath) {
-            return dirPath.includes('node_modules') || dirPath.includes('.git')
-          },
+            return ignoredFolders.some((folder) => dirPath.includes(folder))
+          }
         })
-        .withPromise() as any as Promise<Output>
+        .withPromise() as any) as Promise<Output>
 
-      const data = sortIntoDirStructure(await sorted, fsPath)
+      const data = sortIntoDirStructure(await sorted, fsPath, resolvedExt)
 
       storageBin.push({
         name,
-        data,
+        data
       })
     }
   }

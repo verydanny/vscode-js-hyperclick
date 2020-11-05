@@ -28,6 +28,18 @@
 						"node_modules",
 						".git"
 					]
+				},
+				"smart-goto.resolveExtensions": {
+					"type": "array",
+					"description": "List of extensions to resolve. Recommend to keep styling, image, etc. extensions. For example, don't resolve `.css`, `.scss`, `.png`, etc.",
+					"default": [
+						".ts",
+						".tsx",
+						".js",
+						".jsx",
+						".mjs",
+						".cjs"
+					]
 				}
 			}
 		}

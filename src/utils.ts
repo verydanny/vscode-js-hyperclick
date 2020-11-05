@@ -49,7 +49,8 @@ export const createAliasListForThisDir = (folderSections: string[]) => {
 
 export const createFileAliasListForAliases = (
   folderSections: string[],
-  filesArray: string[]
+  filesArray: string[],
+  resolvedExt: string[]
 ) => {
   const result = []
 
@@ -59,12 +60,16 @@ export const createFileAliasListForAliases = (
     for (let fi = 0; fi < filesArray.length; fi++) {
       const currentFile = pathParse(filesArray[fi])
 
-      result.push(
-        `${currentFolder}/${currentFile.name}`,
-        currentFile,
-        `${currentFolder}/${currentFile.base}`,
-        currentFile
-      )
+      if (resolvedExt.includes(currentFile.ext)) {
+        result.push(
+          `${currentFolder}/${currentFile.name}`,
+          currentFile,
+          `${currentFolder}/${currentFile.base}`,
+          currentFile
+        )
+      } else {
+        result.push(`${currentFolder}/${currentFile.base}`, currentFile)
+      }
     }
   }
 
@@ -85,7 +90,7 @@ function tryParse(
     return {
       tokens,
       code,
-      range,
+      range
     }
   } catch {
     return tryParse(
@@ -114,7 +119,7 @@ export function getParsedImport(
   const importParsed: ImportParsed = {
     path: null,
     type: null,
-    range,
+    range
   }
 
   let notDone = true

@@ -50,7 +50,7 @@ export const ignoredGlob = [
   '.yarn/unplugged',
   '.yarn/build-state.yml',
   '.yarn/install-state.gz',
-  '.pnp.*',
+  '.pnp.*'
 ]
 
 export const indexFiles = [
@@ -59,5 +59,5 @@ export const indexFiles = [
   'index.tsx',
   'index.ts',
   'index.mjs',
-  'index.cjs',
+  'index.cjs'
 ]

@@ -8,9 +8,14 @@ import { buildWorkplaceLayout } from './workspace'
 export function activate(context: vscode.ExtensionContext) {
   const schema = {
     scheme: 'file',
-    pattern: `**/*.{${possibleExtensions.toString()}}`,
+    pattern: `**/*.{${possibleExtensions.toString()}}`
   }
-  // vscode.typescript-language-features
+  const ignoredFolders = vscode.workspace
+    .getConfiguration('smart-goto')
+    .get('ignoreFolders') as string[]
+  const resolvedExtensions = vscode.workspace
+    .getConfiguration('smart-goto')
+    .get('resolveExtensions') as string[]
   const defProvider = new Provider(context)
   // //
   // This is costly so we want to store the results in VScode
@@ -21,7 +26,11 @@ export function activate(context: vscode.ExtensionContext) {
 
     if (openWorkspaces) {
       const startDir = performance.now()
-      const workspaces = await buildWorkplaceLayout(openWorkspaces)
+      const workspaces = await buildWorkplaceLayout(
+        openWorkspaces,
+        ignoredFolders,
+        resolvedExtensions
+      )
       const doneDir = performance.now()
       console.log('doneDir', doneDir - startDir)
 

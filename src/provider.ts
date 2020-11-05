@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/prefer-for-of */
 import { performance } from 'perf_hooks'
-import { parse as pathParse, ParsedPath } from "path"
+import { parse as pathParse, ParsedPath } from 'path'
 
-import * as vscode from "vscode"
+import * as vscode from 'vscode'
 
-import { getParsedImport } from "./utils"
-import { GroupExtended, StorageBinData } from "./workspace"
+import { getParsedImport } from './utils'
+import { GroupExtended, StorageBinData } from './workspace'
 
 type Match = {
   file: boolean | ParsedPath
@@ -19,7 +19,7 @@ export class Provider {
   context: vscode.ExtensionContext
   documentUri?: vscode.Uri
   workspaceName?: string
-  directoryLayout?: Array<import("./workspace").StorageBinData>
+  directoryLayout?: Array<import('./workspace').StorageBinData>
   cacheList: Map<string, vscode.Location>
 
   range = new vscode.Range(0, 0, 0, 0)
@@ -29,17 +29,15 @@ export class Provider {
     this.cacheList = new Map()
   }
 
-  provideDefinition(
-    document: vscode.TextDocument,
-    position: vscode.Position
-  ) {
+  provideDefinition(document: vscode.TextDocument, position: vscode.Position) {
     const URI = document.uri
-    const currentFolder = vscode.Uri.joinPath(URI, "../")
+    const currentFolder = vscode.Uri.joinPath(URI, '../')
     const importLine = document.lineAt(position)
     const workspaceName = vscode.workspace.getWorkspaceFolder(URI)
-    const directoryLayout:
-      | StorageBinData
-      | undefined = workspaceName?.name
+    const resolvedExtensions = vscode.workspace
+      .getConfiguration('smart-goto')
+      .get('resolveExtensions') as string[]
+    const directoryLayout: StorageBinData | undefined = workspaceName?.name
       ? this.context.workspaceState.get(workspaceName.name)
       : undefined
     const cachedLocation = this.cacheList.get(importLine.text)
@@ -60,7 +58,7 @@ export class Provider {
         folderTerm: null,
         unsafe: false,
         fileExtension: pathParseImport.ext || false,
-        isAliased: false,
+        isAliased: false
       }
       let foundFolderTerm = false
       let foundFileTerm = false
@@ -103,10 +101,8 @@ export class Provider {
         for (let fi = 0; fi < fileSearchTerms.length; fi++) {
           const fileTerm = fileSearchTerms[fi]
 
-          if (typeof fileTerm === "string") {
-            const fileInformation = fileSearchTerms[
-              fi + 1
-            ] as ParsedPath
+          if (typeof fileTerm === 'string') {
+            const fileInformation = fileSearchTerms[fi + 1] as ParsedPath
 
             if (fileTerm === importParsed.path) {
               match = {
@@ -114,19 +110,21 @@ export class Provider {
                 ...fileInfo,
                 file: fileInformation,
                 unsafe: false,
-                isAliased: true,
+                isAliased: true
               }
               foundFileTerm = true
 
               break
-            } else if (worstCaseRegex.test(fileTerm)) {
+            }
+
+            if (worstCaseRegex.test(fileTerm)) {
               // This should be a percentage matcher. We want to unsafe match
               // to most likely candidate
               match = {
                 ...match,
                 ...fileInfo,
                 file: fileInformation,
-                unsafe: true,
+                unsafe: true
               }
               foundFileTerm = true
             }
@@ -137,7 +135,7 @@ export class Provider {
       // End directory loop
 
       // If it's an index file
-      if (typeof match.file === "object" && match.fullPath) {
+      if (typeof match.file === 'object' && match.fullPath) {
         // Not a regex match, probably good
         if (!match.unsafe) {
           const query = vscode.Uri.joinPath(
@@ -149,7 +147,7 @@ export class Provider {
           this.cacheList.set(importLine.text, location)
 
           const safeDone = performance.now()
-          console.log('safeDone',  safeDone - start)
+          console.log('safeDone', safeDone - start)
           return location
         }
 
@@ -161,11 +159,11 @@ export class Provider {
                 vscode.Uri.parse(match.fullPath),
                 match.file.base
               )
-  
+
               const location = new vscode.Location(query, this.range)
-  
+
               this.cacheList.set(importLine.text, location)
-  
+
               const unsafeFileExt = performance.now()
               console.log('unsafeFileExt', unsafeFileExt - start)
               return location
@@ -176,13 +174,16 @@ export class Provider {
                 vscode.Uri.parse(match.fullPath),
                 match.file.base
               )
-  
+
               const location = new vscode.Location(query, this.range)
-  
+
               this.cacheList.set(importLine.text, location)
-  
+
               const unsafeFileNotIndexDone = performance.now()
-              console.log('unsafeFileNotIndexDone', unsafeFileNotIndexDone - start)
+              console.log(
+                'unsafeFileNotIndexDone',
+                unsafeFileNotIndexDone - start
+              )
               return location
             }
 
@@ -205,7 +206,7 @@ export class Provider {
       if (!match.file && match.hasIndex && match.fullPath) {
         const query = vscode.Uri.joinPath(
           vscode.Uri.parse(match.fullPath),
-          match.indexValues!.join("")
+          match.indexValues!.join('')
         )
 
         const location = new vscode.Location(query, this.range)
@@ -221,10 +222,7 @@ export class Provider {
         const parsedWeird = pathParse(importParsed.path)
 
         if (parsedWeird.ext && /^.*/.test(parsedWeird.dir)) {
-          const query = vscode.Uri.joinPath(
-            currentFolder,
-            importParsed.path
-          )
+          const query = vscode.Uri.joinPath(currentFolder, importParsed.path)
 
           const location = new vscode.Location(query, this.range)
 
