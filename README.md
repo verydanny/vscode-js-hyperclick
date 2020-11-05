@@ -8,9 +8,12 @@ VSCode extension that attempts to deduce aliased module paths.
 
 1. Install plugin
 2. CMD/CTRL + Click, F12, or right click -> Go To Definition on import paths
+3. **(optional performance boost):** In vscode settings, Editor > Goto Location: Multiple Definitions > goto. This will open the winning result first. It the settings.json, it's `"editor.gotoLocation.multipleDefinitions": "goto"`.
+
+
 
 # Information
-Sometimes aliases are defined in webpack, Typescript settings, or babel to avoid relative imports. I will not argue if this is right or wrong (it's wrong), but I got tired of having to copy/paste the paths and type it into vscode's fuzzy search for certain projects I was working on.
+Sometimes aliases are defined in webpack, Typescript settings, or babel to avoid relative imports. I got tired of having to copy/paste the paths and type it into vscode's fuzzy search for certain projects I was working on.
 
 If you’re not familiar with the concept of aliasing, it turns a file like this:
 
