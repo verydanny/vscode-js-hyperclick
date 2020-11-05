@@ -34,10 +34,12 @@ export function activate(context: vscode.ExtensionContext) {
       const doneDir = performance.now()
       console.log('doneDir', doneDir - startDir)
 
-      if (workspaces) {
+      if (workspaces && Array.isArray(workspaces)) {
         for (const { name, data } of workspaces) {
           context.workspaceState.update(name, data)
         }
+      } else {
+        context.workspaceState.update(workspaces.name, workspaces.data)
       }
     }
   }
