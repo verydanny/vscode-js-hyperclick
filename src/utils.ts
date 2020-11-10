@@ -18,7 +18,7 @@ interface TryParse {
 }
 
 interface ImportParsed {
-  type: 'import' | 'require' | null
+  type: 'import' | 'require' | 'export' | null
   path: string | null
   range: vscode.Range
 }
@@ -104,6 +104,7 @@ function tryParse(
 const STRING_TYPE = 2048
 const EOF_TYPE = 3072
 const IMPORT_TYPE = 44048
+const EXPORT_TYPE = 43536
 const NAME_TYPE = 2560
 
 export function getParsedImport(
@@ -147,6 +148,11 @@ export function getParsedImport(
     if (currentToken.type === NAME_TYPE && currentTokenString === 'require') {
       notDone = false
       importParsed.type = 'require'
+    }
+
+    if (currentToken.type === EXPORT_TYPE) {
+      notDone = false
+      importParsed.type = 'export'
     }
 
     if (!tokens.length) {

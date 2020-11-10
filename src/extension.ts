@@ -26,7 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     if (openWorkspaces) {
       const startDir = performance.now()
-      const workspaces = await buildWorkplaceLayout(
+      const workspaces = buildWorkplaceLayout(
         openWorkspaces,
         ignoredFolders,
         resolvedExtensions
@@ -59,6 +59,8 @@ export function activate(context: vscode.ExtensionContext) {
   )
 
   context.subscriptions.push(definitionProvider)
+
+  // Just a stub promise
   updateFileCache().then(() =>
     context.subscriptions.push(
       onDidCreateFiles,

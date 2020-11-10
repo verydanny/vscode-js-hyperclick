@@ -87,7 +87,7 @@ function sortIntoDirStructure(
   return result as StorageBinData
 }
 
-async function crawlWorkspaces(fsPath: string, ignoredFolders: string[]) {
+function crawlWorkspaces(fsPath: string, ignoredFolders: string[]) {
   return (new Fdir()
     .crawlWithOptions(fsPath, {
       group: true,
@@ -95,10 +95,10 @@ async function crawlWorkspaces(fsPath: string, ignoredFolders: string[]) {
         return ignoredFolders.some((folder) => dirPath.includes(folder))
       }
     })
-    .withPromise() as any) as Promise<Output>
+    .sync() as any) as Output
 }
 
-export async function buildWorkplaceLayout(
+export function buildWorkplaceLayout(
   openWorkspaces: ReadonlyArray<vscode.WorkspaceFolder>,
   ignoredFolders: string[],
   resolvedExt: string[]
@@ -109,7 +109,7 @@ export async function buildWorkplaceLayout(
     if (openWorkspaces.length === 1) {
       const fsPath = openWorkspaces[0].uri.fsPath
       const data = sortIntoDirStructure(
-        await crawlWorkspaces(fsPath, ignoredFolders),
+        crawlWorkspaces(fsPath, ignoredFolders),
         fsPath,
         resolvedExt
       )
@@ -123,7 +123,7 @@ export async function buildWorkplaceLayout(
     for (const { name, uri } of openWorkspaces) {
       const fsPath = uri.fsPath
       const data = sortIntoDirStructure(
-        await crawlWorkspaces(fsPath, ignoredFolders),
+        crawlWorkspaces(fsPath, ignoredFolders),
         fsPath,
         resolvedExt
       )
