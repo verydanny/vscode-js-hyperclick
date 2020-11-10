@@ -15,7 +15,14 @@
 	],
 	"main": "./out/extension.js",
 	"activationEvents": [
-		"*"
+		"onLanguage:javascript",
+		"onLanguage:javascriptreact",
+		"onLanguage:typescript",
+		"onLanguage:typescriptreact",
+		"onLanguage:jsx-tags",
+		"onLanguage:jsonc",
+		"onLanguage:svelte",
+		"onLanguage:vue"
 	],
 	"contributes": {
 		"configuration": {
@@ -46,9 +53,11 @@
 	},
 	"scripts": {
 		"clean": "rm -rf ./out",
-		"vscode:prepublish": "yarn run compile",
-		"compile": "yarn clean && yarn esbuild ./src/extension.ts --bundle --platform=node --target=node10.4 --minify --sourcemap --external:vscode --define:process.env.NODE_ENV='\"production\"' --outfile=./out/extension.js",
+		"vscode:prepublish": "yarn compile && yarn compress",
+		"compile": "yarn clean && yarn esbuild ./src/extension.ts --bundle --external:vscode --main-fields=module,main --platform=node --target=node10.23.0 --minify --sourcemap --define:process.env.NODE_ENV='\"production\"' --outfile=./out/extension.js",
+		"compile-lite": "yarn clean && yarn esbuild ./src/extension.ts --bundle --external:vscode --main-fields=module,main --platform=node --target=node10.23.0 --sourcemap --define:process.env.NODE_ENV='\"production\"' --outfile=./out/extension.js",
 		"lint": "eslint . --ext .ts,.tsx",
+		"compress": "terser out/extension.js -o out/extension.js --comments=false -c passes=2 -m --mange-props --ecma=2020 --source-map",
 		"watch": "tsc -watch -p ./"
 	},
 	"repository": {
@@ -57,6 +66,8 @@
 	"bugs": {
 		"url": "https://github.com/verydanny/vscode-js-hyperclick/issues"
 	},
+	"enableProposedApi": true,
+	"enableProposedAPI": true,
 	"keywords": [
 		"hyperclick",
 		"goto",
@@ -71,16 +82,17 @@
 	},
 	"devDependencies": {
 		"@torpedus/eslint-plugin": "^1.2.1",
-		"@types/is-absolute": "^1.0.0",
 		"@types/mocha": "^8.0.3",
 		"@types/node": "^14.14.6",
-		"@types/parse-gitignore": "^1.0.0",
-		"@types/picomatch": "^2.2.1",
 		"@types/vscode": "^1.50.0",
-		"esbuild": "^0.8.2",
+		"esbuild": "^0.8.5",
 		"eslint": "^7.12.1",
+		"fast-glob": "^3.2.4",
 		"fdir": "^4.1.0",
+		"jsonc-parser": "^2.3.1",
+		"picomatch": "^2.2.2",
 		"sucrase": "^3.16.0",
+		"terser": "^5.3.8",
 		"typescript": "^4.0.5"
 	}
 }

@@ -4,13 +4,20 @@
 		"target": "es2018",
 		"outDir": "out",
 		"lib": [
-			"es2018"
+			"es2018",
+			"ESNext.Promise"
 		],
 		"sourceMap": true,
+		"importHelpers": true,
 		"rootDir": "src",
 		"skipLibCheck": true,
 		"skipDefaultLibCheck": true,
-		"strict": true   /* enable all strict type-checking options */
+		/* enable all strict type-checking options */
+		"strict": true,
+		"typeRoots": [
+			"node_modules/@types",
+			"types/**/*.d.ts"
+		]
 		/* Additional Checks */
 		// "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
 		// "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */

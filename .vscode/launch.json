@@ -9,7 +9,9 @@
 			"name": "Run Extension",
 			"type": "extensionHost",
 			"request": "launch",
+
 			"args": [
+				"--enable-proposed-api verydanny.smart-goto",
 				"--extensionDevelopmentPath=${workspaceFolder}"
 			],
 			"outFiles": [
