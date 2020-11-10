@@ -4,7 +4,7 @@
 	"description": "This extension lets you jump to your files, even if they're aliased through webpack, typescript, or other tools. If you don't specify aliases in your vscode workspace config, then it attempts to deduce them by building a virtual directory structure.",
 	"version": "0.9.0",
 	"engines": {
-		"vscode": ">=1.50.0"
+		"vscode": ">=1.51.0"
 	},
 	"author": {
 		"name": "Daniil Veremchuk"
