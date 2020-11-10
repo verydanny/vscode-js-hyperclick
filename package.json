@@ -47,8 +47,8 @@
 	"scripts": {
 		"clean": "rm -rf ./out",
 		"vscode:prepublish": "yarn compile && yarn compress",
-		"compile": "yarn clean && yarn esbuild ./src/extension.ts --bundle --external:vscode --main-fields=module,main --platform=node --target=node10.23.0 --sourcemap --define:process.env.NODE_ENV='\"production\"' --outfile=./out/extension.js",
-		"compress": "terser out/extension.js -o out/extension.js --comments=false -c passes=2 -m --mange-props --ecma=2020 --source-map",
+		"compile": "yarn clean && yarn esbuild ./src/extension.ts --bundle --minify --external:vscode --main-fields=module,main --platform=node --target=node12.14.1 --sourcemap --define:process.env.NODE_ENV='\"production\"' --outfile=./out/extension.js",
+		"compress": "terser out/extension.js -o out/extension.js --comments=false -c passes=4 -m --mange-props --ecma=2018 --source-map",
 		"lint": "eslint . --ext .ts,.tsx",
 		"watch": "tsc -watch -p ./"
 	},
